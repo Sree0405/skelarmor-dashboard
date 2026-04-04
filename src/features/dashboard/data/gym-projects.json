@@ -1,0 +1,7 @@
+[
+  { "id": "g1", "clientId": "u2", "clientName": "FitZone Athletics", "projectName": "Main Floor Expansion", "location": "Berlin, DE", "budget": 245000, "totalAmount": 245000, "paidAmount": 170000, "pendingAmount": 75000, "timeline": "Q1–Q2 2026", "status": "ongoing", "progress": 62 },
+  { "id": "g2", "clientId": "u3", "clientName": "Peak Performance Club", "projectName": "New Branch Setup", "location": "Austin, TX", "budget": 189000, "totalAmount": 189000, "paidAmount": 50000, "pendingAmount": 139000, "timeline": "Q2–Q3 2026", "status": "planning", "progress": 15 },
+  { "id": "g3", "clientId": "u4", "clientName": "Iron Temple Gym", "projectName": "Full Renovation", "location": "Melbourne, AU", "budget": 312000, "totalAmount": 312000, "paidAmount": 312000, "pendingAmount": 0, "timeline": "Q4 2025–Q1 2026", "status": "completed", "progress": 100 },
+  { "id": "g4", "clientId": "u2", "clientName": "Velocity Fitness", "projectName": "Equipment Upgrade", "location": "Toronto, CA", "budget": 178000, "totalAmount": 178000, "paidAmount": 120000, "pendingAmount": 58000, "timeline": "Q1–Q3 2026", "status": "ongoing", "progress": 38 },
+  { "id": "g5", "clientId": "u3", "clientName": "Atlas Strength Co.", "projectName": "Premium Build-Out", "location": "London, UK", "budget": 425000, "totalAmount": 425000, "paidAmount": 100000, "pendingAmount": 325000, "timeline": "Q2–Q4 2026", "status": "planning", "progress": 8 }
+]

@@ -1,0 +1,10 @@
+[
+  { "id": "c1", "name": "Marcus Rivera", "age": 28, "goal": "weight_loss", "currentWeight": 92.4, "fatPercentage": 24.1, "status": "active", "assignedClientId": "u2" },
+  { "id": "c2", "name": "Elena Kowalski", "age": 34, "goal": "weight_gain", "currentWeight": 55.8, "fatPercentage": 18.3, "status": "active", "assignedClientId": "u3" },
+  { "id": "c3", "name": "Darius Chen", "age": 41, "goal": "weight_loss", "currentWeight": 105.2, "fatPercentage": 31.5, "status": "active", "assignedClientId": "u4" },
+  { "id": "c4", "name": "Sofia Andersson", "age": 26, "goal": "weight_loss", "currentWeight": 78.6, "fatPercentage": 27.8, "status": "inactive", "assignedClientId": "u2" },
+  { "id": "c5", "name": "Kwame Osei", "age": 31, "goal": "weight_gain", "currentWeight": 68.3, "fatPercentage": 14.2, "status": "active", "assignedClientId": "u3" },
+  { "id": "c6", "name": "Nadia Petrov", "age": 29, "goal": "weight_loss", "currentWeight": 84.1, "fatPercentage": 29.4, "status": "active", "assignedClientId": "u2" },
+  { "id": "c7", "name": "Tomás Herrera", "age": 37, "goal": "weight_gain", "currentWeight": 72.9, "fatPercentage": 16.7, "status": "inactive", "assignedClientId": "u4" },
+  { "id": "c8", "name": "Lina Nakamura", "age": 24, "goal": "weight_loss", "currentWeight": 67.2, "fatPercentage": 22.6, "status": "active", "assignedClientId": "u2" }
+]

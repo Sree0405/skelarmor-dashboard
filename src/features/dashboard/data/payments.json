@@ -1,0 +1,15 @@
+[
+  { "id": "pay1", "projectId": "g1", "amount": 75000, "date": "2025-10-15", "type": "paid" },
+  { "id": "pay2", "projectId": "g1", "amount": 50000, "date": "2025-12-01", "type": "paid" },
+  { "id": "pay3", "projectId": "g1", "amount": 45000, "date": "2026-02-01", "type": "paid" },
+  { "id": "pay4", "projectId": "g1", "amount": 75000, "date": "2026-04-15", "type": "pending" },
+  { "id": "pay5", "projectId": "g2", "amount": 50000, "date": "2026-01-10", "type": "paid" },
+  { "id": "pay6", "projectId": "g2", "amount": 139000, "date": "2026-05-01", "type": "pending" },
+  { "id": "pay7", "projectId": "g4", "amount": 60000, "date": "2025-11-01", "type": "paid" },
+  { "id": "pay8", "projectId": "g4", "amount": 60000, "date": "2026-01-15", "type": "paid" },
+  { "id": "pay9", "projectId": "g4", "amount": 58000, "date": "2026-04-01", "type": "pending" },
+  { "id": "pay10", "projectId": "g3", "amount": 150000, "date": "2025-08-01", "type": "paid" },
+  { "id": "pay11", "projectId": "g3", "amount": 162000, "date": "2025-11-01", "type": "paid" },
+  { "id": "pay12", "projectId": "g5", "amount": 100000, "date": "2026-02-15", "type": "paid" },
+  { "id": "pay13", "projectId": "g5", "amount": 325000, "date": "2026-06-01", "type": "pending" }
+]

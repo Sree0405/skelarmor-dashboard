@@ -1,0 +1,6 @@
+[
+  { "id": "u1", "name": "Arjun Kapoor", "role": "admin", "email": "arjun@fitforge.io" },
+  { "id": "u2", "name": "Marcus Rivera", "role": "client", "email": "marcus@email.com" },
+  { "id": "u3", "name": "Elena Kowalski", "role": "client", "email": "elena@email.com" },
+  { "id": "u4", "name": "Darius Chen", "role": "client", "email": "darius@email.com" }
+]
