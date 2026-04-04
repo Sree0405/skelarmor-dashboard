@@ -8,7 +8,7 @@ import Lightning from "@/components/Lightning";
 
 // ── New auth feature imports (replaces old store + local helper) ──────────────
 import { useAuthStore }      from "@/features/Login/store";
-import { login }             from "@/features/Login/api";
+import { enforceLoginOrganizationPolicy, login } from "@/features/Login/api";
 import { getRoleDestination } from "@/features/Login/utils";
 
 // ─── Static data ──────────────────────────────────────────────────────────────
@@ -44,6 +44,7 @@ export const LoginPage = () => {
   const handleLogin = async () => {
     if (!email || !password) { setError("Please fill in all fields."); return; }
 
+    let tokenApplied = false;
     try {
       setLoading(true);
       setError("");
@@ -56,15 +57,37 @@ export const LoginPage = () => {
       //    fetchMe() doesn't skip the call if the user logged out and is signing
       //    in again within the same session (status would otherwise be "error").
       setToken(access_token, refresh_token);
+      tokenApplied = true;
 
       // 3. Fetch /users/me when user was cleared by setToken — blocking so we have dashboard_roles before navigating.
       await fetchMe();
-      const role = useAuthStore.getState().user?.dashboard_roles;
+      const user = useAuthStore.getState().user;
+      if (user) {
+        await enforceLoginOrganizationPolicy(user);
+      }
+      const role = user?.dashboard_roles;
+      console.log(useAuthStore.getState().user);
       // 4. Resolve destination and navigate
       const destination = getRoleDestination(role);
       navigate(destination);
 
     } catch (err: unknown) {
+      if (tokenApplied) {
+        try {
+          useAuthStore.persist.clearStorage();
+        } catch {
+          /* ignore */
+        }
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        useAuthStore.setState({
+          user: null,
+          accessToken: null,
+          refreshToken: null,
+          isLoading: false,
+          hydrationStatus: "idle",
+        });
+      }
       setError(err instanceof Error ? err.message : "Login failed.");
     } finally {
       setLoading(false);

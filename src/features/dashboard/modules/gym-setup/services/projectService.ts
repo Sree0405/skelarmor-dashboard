@@ -1,6 +1,10 @@
 import axios from "axios";
 import { api } from "@/lib/apiClient";
 import { getAccessToken } from "@/lib/authToken";
+import {
+  assertBelongsToCurrentOrganization,
+  withOrganization,
+} from "@/lib/organizationScope";
 import type { Customer } from "@/features/dashboard/modules/customers/types";
 import type { GymProject, Payment } from "@/features/dashboard/types";
 import type {
@@ -183,18 +187,21 @@ export async function getProjectsByClient(clientId: string): Promise<GymProject[
 
 export async function getProjectById(id: string): Promise<GymProject> {
   const json = await apiJson<{ data: DirectusProjectRow }>(`/items/projects/${id}?${PROJECT_FIELDS}`);
-  return normalizeProject(unwrapData(json));
+  const row = unwrapData(json);
+  assertBelongsToCurrentOrganization((row as { organization?: unknown }).organization);
+  return normalizeProject(row);
 }
 
 export async function createProject(body: CreateDirectusProjectPayload): Promise<GymProject> {
   const json = await apiJson<{ data: DirectusProjectRow }>("/items/projects", {
     method: "POST",
-    body: JSON.stringify(body),
+    body: JSON.stringify(withOrganization(body)),
   });
   return normalizeProject(unwrapData(json));
 }
 
 export async function updateProjectApi(id: string, body: UpdateDirectusProjectPayload): Promise<GymProject> {
+  await getProjectById(id);
   const json = await apiJson<{ data: DirectusProjectRow }>(`/items/projects/${id}`, {
     method: "PATCH",
     body: JSON.stringify(body),
@@ -205,7 +212,9 @@ export async function updateProjectApi(id: string, body: UpdateDirectusProjectPa
 /** Raw row for financial patch (snake_case amounts). */
 async function getProjectRaw(id: string): Promise<DirectusProjectRow> {
   const json = await apiJson<{ data: DirectusProjectRow }>(`/items/projects/${id}?fields=*`);
-  return unwrapData(json);
+  const row = unwrapData(json);
+  assertBelongsToCurrentOrganization((row as { organization?: unknown }).organization);
+  return row;
 }
 
 export async function getProjectPayments(projectId: string): Promise<Payment[]> {
@@ -263,9 +272,10 @@ export async function addProjectPayment(
     type: payload.type ?? "paid",
     notes: payload.notes ?? null,
   };
+  await getProjectById(projectId);
   const json = await apiJson<{ data: DirectusProjectPaymentRow }>("/items/payments", {
     method: "POST",
-    body: JSON.stringify(body),
+    body: JSON.stringify(withOrganization(body)),
   });
   const created = normalizeProjectPayment(unwrapData(json));
 

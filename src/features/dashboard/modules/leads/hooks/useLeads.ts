@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { api } from "@/lib/apiClient";
+import { useOrganization } from "@/features/dashboard/hooks/useOrganization";
 import { Lead, normalizeLead } from "../types/lead";
 
 async function fetchLeads(): Promise<Lead[]> {
@@ -36,16 +37,19 @@ async function fetchLeadById(id: string): Promise<Lead> {
 }
 
 export function useLeads() {
+  const { orgId, isSuperAdmin } = useOrganization();
   return useQuery<Lead[], Error>({
-    queryKey: ["leads"],
+    queryKey: ["leads", orgId ?? "super-admin"],
     queryFn: fetchLeads,
+    enabled: Boolean(orgId || isSuperAdmin),
   });
 }
 
 export function useLeadById(id: string | undefined) {
+  const { orgId, isSuperAdmin } = useOrganization();
   return useQuery<Lead, Error>({
-    queryKey: ["leads", id],
+    queryKey: ["leads", orgId ?? "super-admin", id],
     queryFn: () => fetchLeadById(id!),
-    enabled: Boolean(id),
+    enabled: Boolean(id && (orgId || isSuperAdmin)),
   });
 }

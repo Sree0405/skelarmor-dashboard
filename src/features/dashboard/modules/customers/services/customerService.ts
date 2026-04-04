@@ -2,6 +2,12 @@ import axios from "axios";
 import { api } from "@/lib/apiClient";
 import { getAccessToken } from "@/lib/authToken";
 import {
+  assertBelongsToCurrentOrganization,
+  requireOrganizationId,
+  withOrganization,
+} from "@/lib/organizationScope";
+import { ensureOrganizationCanAddUser } from "@/lib/organizationPolicy";
+import {
   TRAINING_CLIENT_ROLE,
   type CreateCustomerPayload,
   type CreatePaymentPayload,
@@ -83,14 +89,18 @@ export async function getCustomers(): Promise<Customer[]> {
 
 export async function getCustomerById(id: string): Promise<Customer> {
   const json = await apiJson<{ data: Customer }>(`/users/${id}?fields=*`);
-  return unwrapData(json);
+  const customer = unwrapData(json);
+  assertBelongsToCurrentOrganization(customer.organization);
+  return customer;
 }
 
 export async function createCustomer(data: CreateCustomerPayload): Promise<Customer> {
-  const body = {
+  const orgId = requireOrganizationId();
+  await ensureOrganizationCanAddUser(orgId);
+  const body = withOrganization({
     ...data,
     dashboard_roles: data.dashboard_roles ?? TRAINING_CLIENT_ROLE,
-  };
+  }, orgId);
   const json = await apiJson<{ data: Customer }>("/users", {
     method: "POST",
     body: JSON.stringify(body),
@@ -99,6 +109,7 @@ export async function createCustomer(data: CreateCustomerPayload): Promise<Custo
 }
 
 export async function updateCustomer(id: string, data: UpdateCustomerPayload): Promise<Customer> {
+  await getCustomerById(id);
   const json = await apiJson<{ data: Customer }>(`/users/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),
@@ -107,6 +118,7 @@ export async function updateCustomer(id: string, data: UpdateCustomerPayload): P
 }
 
 export async function deleteCustomer(id: string): Promise<void> {
+  await getCustomerById(id);
   await apiJson<undefined>(`/users/${id}`, { method: "DELETE" });
 }
 
@@ -133,7 +145,7 @@ export async function getFitnessProgressForUsers(userIds: string[]): Promise<Fit
 export async function addProgress(data: CreateProgressPayload): Promise<FitnessProgress> {
   const json = await apiJson<{ data: FitnessProgress }>("/items/fitness_progress", {
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify(withOrganization(data)),
   });
   return unwrapData(json);
 }
@@ -161,7 +173,7 @@ export async function getPaymentsForUsers(userIds: string[]): Promise<CustomerPa
 export async function addPayment(data: CreatePaymentPayload): Promise<CustomerPayment> {
   const json = await apiJson<{ data: CustomerPayment }>("/items/payments", {
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify(withOrganization(data)),
   });
   return unwrapData(json);
 }
@@ -170,6 +182,10 @@ export async function updatePayment(
   id: string,
   data: UpdatePaymentPayload
 ): Promise<CustomerPayment> {
+  const existing = await apiJson<{ data: { organization?: unknown } }>(
+    `/items/payments/${id}?fields=id,organization`
+  );
+  assertBelongsToCurrentOrganization(existing.data?.organization);
   const json = await apiJson<{ data: CustomerPayment }>(`/items/payments/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),
@@ -181,6 +197,10 @@ export async function updateProgress(
   id: string,
   data: UpdateProgressPayload
 ): Promise<FitnessProgress> {
+  const existing = await apiJson<{ data: { organization?: unknown } }>(
+    `/items/fitness_progress/${id}?fields=id,organization`
+  );
+  assertBelongsToCurrentOrganization(existing.data?.organization);
   const json = await apiJson<{ data: FitnessProgress }>(`/items/fitness_progress/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),

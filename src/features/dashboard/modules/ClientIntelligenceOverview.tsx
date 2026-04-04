@@ -74,7 +74,7 @@ function IntelSkeleton() {
 
 export function ClientIntelligenceOverview() {
   const { cards, isLoading, isError } = useAdminClientIntelligence();
-
+console.log(isError);
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-2">

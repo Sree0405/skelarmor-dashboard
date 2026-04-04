@@ -31,6 +31,9 @@ import { GymClientsModule, GymClientDetail } from "@/features/dashboard/modules/
 import { CustomerDetail }   from "@/features/dashboard/modules/customers/CustomerDetail";
 import { LeadsModule }      from "@/features/dashboard/modules/leads/LeadsModule";
 import { LeadDetail }       from "@/features/dashboard/modules/leads/LeadDetail";
+import { LeadsFeatureGate } from "@/features/dashboard/modules/leads/LeadsFeatureGate";
+import { OrganizationsModule } from "@/features/dashboard/modules/organizations/OrganizationsModule";
+import { SuperAdminFeatureGate } from "@/features/dashboard/modules/organizations/SuperAdminFeatureGate";
 
 // Shared Modules
 import { ClientPayments }   from "@/features/dashboard/modules/gym-setup/ClientPayments";
@@ -84,8 +87,16 @@ const App = () => (
             </Route>
             <Route path="gym-clients" element={<GymClientsModule />} />
             <Route path="gym-clients/:id" element={<GymClientDetail />} />
-            <Route path="leads"           element={<LeadsModule />} />
-            <Route path="leads/:id"       element={<LeadDetail />} />
+            <Route path="leads" element={<LeadsFeatureGate><LeadsModule /></LeadsFeatureGate>} />
+            <Route path="leads/:id" element={<LeadsFeatureGate><LeadDetail /></LeadsFeatureGate>} />
+            <Route
+              path="organizations"
+              element={
+                <SuperAdminFeatureGate>
+                  <OrganizationsModule />
+                </SuperAdminFeatureGate>
+              }
+            />
             <Route path="payments"        element={<ClientPayments />} />
             <Route path="profile" element={<ProfilePage />} />
 

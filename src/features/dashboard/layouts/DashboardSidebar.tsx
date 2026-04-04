@@ -5,6 +5,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { useAuth } from "@/features/Login/useAuth";
+import { useOrganization } from "@/features/dashboard/hooks/useOrganization";
 import { getNavItems, isNavItemActive } from "./navConfig";
 
 // ─── Role badge colours ───────────────────────────────────────────────────────
@@ -21,9 +22,10 @@ export const DashboardSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location  = useLocation();
   const { user } = useAuth();
+  const { isMain, isSuperAdmin } = useOrganization();
 
   const role      = user?.dashboard_roles ?? "";
-  const navItems  = getNavItems(role);
+  const navItems  = getNavItems(role, { isMainOrg: isMain, isSuperAdmin });
   const badge     = ROLE_BADGE[role];
 
   const initials = [user?.first_name, user?.last_name]

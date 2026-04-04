@@ -11,6 +11,7 @@ import {
   Briefcase,
   CreditCard,
   UserCheck,
+  Building,
   type LucideIcon,
   UserCircle,
 } from "lucide-react";
@@ -29,6 +30,7 @@ export const NAV_BY_ROLE: Record<string, NavItem[]> = {
     { label: "Gym Setup", path: "/dashboard/admin/gym-setup", icon: Dumbbell        },
     { label: "Gym clients", path: "/dashboard/admin/gym-clients", icon: Building2 },
     { label: "Leads",     path: "/dashboard/admin/leads",     icon: UserCheck       },
+    { label: "Organizations", path: "/dashboard/admin/organizations", icon: Building },
     { label: "Profile", path: "/dashboard/admin/profile",  icon: UserCircle },
 
   ],
@@ -57,6 +59,7 @@ export const PAGE_TITLES: Record<string, string> = {
   "/dashboard/admin/gym-setup/new":  "New Project",
   "/dashboard/admin/gym-clients":    "Gym clients",
   "/dashboard/admin/leads":          "Leads",
+  "/dashboard/admin/organizations":  "Organizations",
   "/dashboard/admin/profile":        "Profile",
   "/dashboard/franchise":            "Overview",
   "/dashboard/franchise/projects":   "Projects",
@@ -68,9 +71,21 @@ export const PAGE_TITLES: Record<string, string> = {
   "/dashboard/training/profile":     "Profile",
 };
 
-export function getNavItems(role: string | null | undefined): NavItem[] {
+type NavOptions = {
+  isMainOrg?: boolean;
+  isSuperAdmin?: boolean;
+};
+
+export function getNavItems(role: string | null | undefined, opts?: NavOptions): NavItem[] {
   if (!role) return [];
-  return NAV_BY_ROLE[role] ?? [];
+  const base = NAV_BY_ROLE[role] ?? [];
+  if (role !== "admin") return base;
+  if (opts?.isSuperAdmin) return base;
+  const withoutSuperOnly = base.filter((item) => item.path !== "/dashboard/admin/organizations");
+  if (opts?.isMainOrg === false) {
+    return withoutSuperOnly.filter((item) => item.path !== "/dashboard/admin/leads");
+  }
+  return withoutSuperOnly;
 }
 
 /** Dashboard home segments: match exact path only, not deeper routes. */

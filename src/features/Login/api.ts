@@ -1,5 +1,14 @@
 import axios from "axios";
 import { authPublicApi, api } from "@/lib/apiClient";
+import { extractOrganizationId } from "@/lib/organizationScope";
+import { ensureOrganizationIsActive } from "@/lib/organizationPolicy";
+
+type DirectusOrganizationRef = {
+  id: string | number;
+  name?: string;
+  status?: string;
+  max_users?: string | number | null;
+};
 
 export type DirectusUser = {
   id: string;
@@ -8,6 +17,10 @@ export type DirectusUser = {
   last_name?: string;
   avatar?: string;
   dashboard_roles?: string;
+  organization?: string | number | DirectusOrganizationRef | null;
+  organization_id?: string | number | null;
+  organizationId?: string | number | null;
+  is_super_admin?: boolean;
   [key: string]: unknown;
 };
 
@@ -23,7 +36,24 @@ export class AuthApiError extends Error {
 
 export async function fetchCurrentUser(): Promise<DirectusUser> {
   try {
-    const res = await api.get<{ data?: DirectusUser }>("/users/me");
+    const res = await api.get<{ data?: DirectusUser }>("/users/me", {
+      params: {
+        fields: [
+          "id",
+          "email",
+          "first_name",
+          "last_name",
+          "avatar",
+          "dashboard_roles",
+          "organization",
+          "organization.id",
+          "organization.name",
+          "is_super_admin",
+          "organization_id",
+          "organizationId",
+        ].join(","),
+      },
+    });
     const user = res.data?.data;
     if (!user?.id) {
       throw new AuthApiError("Invalid user payload received from server.");
@@ -60,6 +90,15 @@ export async function login(
     }
     throw err;
   }
+}
+
+export async function enforceLoginOrganizationPolicy(user: DirectusUser): Promise<void> {
+  if (user.is_super_admin) return;
+  const orgId = extractOrganizationId(
+    user.organization ?? user.organization_id ?? user.organizationId ?? null
+  );
+  if (!orgId) return;
+  await ensureOrganizationIsActive(orgId);
 }
 
 export async function logoutFromServer(refreshToken: string): Promise<void> {

@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { registerAuthTokenGetter } from "@/lib/authToken";
+import { extractOrganizationId } from "@/lib/organizationScope";
+import { registerTenantContextGetter } from "@/lib/tenantContext";
 import { DirectusUser, fetchCurrentUser, logoutFromServer } from "./api";
 
 type HydrationStatus = "idle" | "loading" | "done" | "error";
@@ -125,6 +127,18 @@ export const useAuthStore = create<AuthState>()(
 );
 
 registerAuthTokenGetter(() => useAuthStore.getState().accessToken ?? null);
+registerTenantContextGetter(() => {
+  const user = useAuthStore.getState().user;
+  const orgCandidate =
+    user?.organization ??
+    user?.organization_id ??
+    user?.organizationId ??
+    null;
+  return {
+    organizationId: extractOrganizationId(orgCandidate),
+    isSuperAdmin: Boolean(user?.is_super_admin),
+  };
+});
 
 export const selectUser = (s: AuthState) => s.user;
 export const selectIsAuth = (s: AuthState) => Boolean(s.user?.id && s.accessToken);

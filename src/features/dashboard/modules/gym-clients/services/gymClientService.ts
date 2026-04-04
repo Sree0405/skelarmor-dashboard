@@ -1,6 +1,12 @@
 import axios from "axios";
 import { api } from "@/lib/apiClient";
 import { getAccessToken } from "@/lib/authToken";
+import {
+  assertBelongsToCurrentOrganization,
+  requireOrganizationId,
+  withOrganization,
+} from "@/lib/organizationScope";
+import { ensureOrganizationCanAddUser } from "@/lib/organizationPolicy";
 import type { GymProject } from "@/features/dashboard/types";
 import { gymProjectService } from "@/features/dashboard/modules/gym-setup/services/projectService";
 import type {
@@ -114,6 +120,7 @@ export async function getGymClientById(id: string): Promise<GymClient> {
   if (u.dashboard_roles !== GYM_FRANCHISE_ROLE) {
     throw new GymClientApiError("Not a gym / franchise client", 403);
   }
+  assertBelongsToCurrentOrganization(u.organization);
   return u;
 }
 
@@ -146,14 +153,16 @@ export async function getFranchiseProjectPaymentsDirectory(): Promise<GymClientP
 }
 
 export async function createGymClient(payload: CreateGymClientPayload): Promise<GymClient> {
-  const body = {
+  const orgId = requireOrganizationId();
+  await ensureOrganizationCanAddUser(orgId);
+  const body = withOrganization({
     email: payload.email.trim(),
     password: payload.password,
     first_name: payload.first_name?.trim() || undefined,
     last_name: payload.last_name?.trim() || undefined,
     location: payload.location?.trim() || null,
     dashboard_roles: GYM_FRANCHISE_ROLE,
-  };
+  }, orgId);
   const json = await apiJson<{ data: GymClient }>("/users", {
     method: "POST",
     body: JSON.stringify(body),
@@ -162,6 +171,7 @@ export async function createGymClient(payload: CreateGymClientPayload): Promise<
 }
 
 export async function updateGymClient(id: string, data: UpdateGymClientPayload): Promise<GymClient> {
+  await getGymClientById(id);
   const json = await apiJson<{ data: GymClient }>(`/users/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),
@@ -170,6 +180,7 @@ export async function updateGymClient(id: string, data: UpdateGymClientPayload):
 }
 
 export async function deleteGymClient(id: string): Promise<void> {
+  await getGymClientById(id);
   await apiJson<undefined>(`/users/${id}`, { method: "DELETE" });
 }
 

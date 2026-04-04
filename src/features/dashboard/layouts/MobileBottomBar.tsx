@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/features/Login/useAuth";
+import { useOrganization } from "@/features/dashboard/hooks/useOrganization";
 import {
   getNavItems,
   isNavItemActive,
@@ -70,7 +71,11 @@ export const MobileBottomBar = () => {
   const location = useLocation();
   const pathname = location.pathname;
   const { user } = useAuth();
-  const navItems = getNavItems(user?.dashboard_roles ?? "");
+  const { isMain, isSuperAdmin } = useOrganization();
+  const navItems = getNavItems(user?.dashboard_roles ?? "", {
+    isMainOrg: isMain,
+    isSuperAdmin,
+  });
   const { primary, overflow } = splitNavForMobileBottomBar(navItems);
 
   const overflowActive = overflow.some((item) => isNavItemActive(item.path, pathname));
