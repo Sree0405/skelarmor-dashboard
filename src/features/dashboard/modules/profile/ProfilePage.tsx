@@ -724,7 +724,7 @@ export const ProfilePage = () => {
                       color:         "#fff",
                       outline:       "none",
                       background:    "rgba(255,255,255,0.05)",
-                      border:        "1px solid rgba(255,255,255,0.08)",
+                      border:        "1px solid rgba(164, 157, 157, 0.08)",
                       width:         "100%",
                       cursor:        "pointer",
                       appearance:    "none",

@@ -13,7 +13,7 @@ interface DashboardCardProps {
 }
 
 const accentMap = {
-  blue: "text-primary glow-blue",
+  blue: "text-primary ",
   gold: "text-accent glow-gold",
   emerald: "text-emerald-400",
   rose: "text-rose-400",
