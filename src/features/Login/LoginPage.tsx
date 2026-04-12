@@ -8,7 +8,7 @@ import Lightning from "@/components/Lightning";
 
 // ── New auth feature imports (replaces old store + local helper) ──────────────
 import { useAuthStore }      from "@/features/Login/store";
-import { enforceLoginOrganizationPolicy, login } from "@/features/Login/api";
+import { enforceLoginAccessPolicies, login } from "@/features/Login/api";
 import { getRoleDestination } from "@/features/Login/utils";
 
 // ─── Static data ──────────────────────────────────────────────────────────────
@@ -63,7 +63,7 @@ export const LoginPage = () => {
       await fetchMe();
       const user = useAuthStore.getState().user;
       if (user) {
-        await enforceLoginOrganizationPolicy(user);
+        await enforceLoginAccessPolicies(user);
       }
       const role = user?.dashboard_roles;
       console.log(useAuthStore.getState().user);

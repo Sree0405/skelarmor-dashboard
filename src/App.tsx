@@ -33,6 +33,8 @@ import { LeadsModule }      from "@/features/dashboard/modules/leads/LeadsModule
 import { LeadDetail }       from "@/features/dashboard/modules/leads/LeadDetail";
 import { LeadsFeatureGate } from "@/features/dashboard/modules/leads/LeadsFeatureGate";
 import { OrganizationsModule } from "@/features/dashboard/modules/organizations/OrganizationsModule";
+import { OrganizationsListPage } from "@/features/dashboard/modules/organizations/pages/OrganizationsListPage";
+import { OrganizationDetailPage } from "@/features/dashboard/modules/organizations/pages/OrganizationDetailPage";
 import { SuperAdminFeatureGate } from "@/features/dashboard/modules/organizations/SuperAdminFeatureGate";
 
 // Shared Modules
@@ -96,7 +98,10 @@ const App = () => (
                   <OrganizationsModule />
                 </SuperAdminFeatureGate>
               }
-            />
+            >
+              <Route index element={<OrganizationsListPage />} />
+              <Route path=":organizationId" element={<OrganizationDetailPage />} />
+            </Route>
             <Route path="payments"        element={<ClientPayments />} />
             <Route path="profile" element={<ProfilePage />} />
 

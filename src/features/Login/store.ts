@@ -3,7 +3,14 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { registerAuthTokenGetter } from "@/lib/authToken";
 import { extractOrganizationId } from "@/lib/organizationScope";
 import { registerTenantContextGetter } from "@/lib/tenantContext";
-import { DirectusUser, fetchCurrentUser, logoutFromServer } from "./api";
+import {
+  AuthApiError,
+  AUTH_ERROR_INACTIVE_CUSTOMER_ACCESS,
+  DirectusUser,
+  enforceTrainingClientAccessPolicy,
+  fetchCurrentUser,
+  logoutFromServer,
+} from "./api";
 
 type HydrationStatus = "idle" | "loading" | "done" | "error";
 
@@ -70,8 +77,16 @@ export const useAuthStore = create<AuthState>()(
 
             set({ isLoading: true, hydrationStatus: "loading" });
             const user = await fetchCurrentUser();
+            enforceTrainingClientAccessPolicy(user);
             set({ user, isLoading: false, hydrationStatus: "done" });
-          } catch {
+          } catch (err) {
+            if (
+              err instanceof AuthApiError &&
+              err.code === AUTH_ERROR_INACTIVE_CUSTOMER_ACCESS
+            ) {
+              await get().logout();
+              return;
+            }
             const stillHasToken = Boolean(get().accessToken);
             set({
               isLoading: false,
