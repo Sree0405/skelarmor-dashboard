@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/features/Login/store";
 import { CustomerDetailView } from "@/features/dashboard/modules/customers/CustomerDetailView";
+import { CUSTOMER_GOAL_OPTIONS } from "@/features/dashboard/modules/customers/goalConstants";
 import { updateProfile, updatePassword, ProfileApiError, ProfileUpdatePayload } from "./ProfileApi";
 
 // ─── Role config ──────────────────────────────────────────────────────────────
@@ -39,15 +40,6 @@ const ROLE_META: Record<string, { label: string; color: string; bg: string; desc
     description: "Personal training & progress tracking",
   },
 };
-
-const GOAL_OPTIONS = [
-  { value: "weight_loss",    label: "Weight Loss"     },
-  { value: "muscle_gain",    label: "Muscle Gain"     },
-  { value: "endurance",      label: "Endurance"       },
-  { value: "flexibility",    label: "Flexibility"     },
-  { value: "general_health", label: "General Health"  },
-  { value: "strength",       label: "Strength"        },
-];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -732,7 +724,7 @@ export const ProfilePage = () => {
                     }}
                   >
                     <option value="" style={{ background: "#111" }}>Select goal…</option>
-                    {GOAL_OPTIONS.map((o) => (
+                    {CUSTOMER_GOAL_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value} style={{ background: "#111" }}>
                         {o.label}
                       </option>
@@ -747,7 +739,7 @@ export const ProfilePage = () => {
                   Quick select
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {GOAL_OPTIONS.map((o) => (
+                  {CUSTOMER_GOAL_OPTIONS.map((o) => (
                     <button
                       key={o.value}
                       onClick={() => setGoal(o.value)}

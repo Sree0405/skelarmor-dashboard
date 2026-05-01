@@ -289,7 +289,7 @@ export const LoginPage = () => {
               style={{ width: 6, height: 6, background: "#22c55e" }}
             />
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.26)" }}>
-              Powered by Directus · SSL Secured · GDPR Ready
+            Secure JWT Authorization · Encrypted Connections · Privacy First
             </span>
           </motion.div>
         </div>

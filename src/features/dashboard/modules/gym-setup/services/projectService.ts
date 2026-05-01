@@ -227,19 +227,20 @@ export async function getProjectPayments(projectId: string): Promise<Payment[]> 
   return list.map(normalizeProjectPayment);
 }
 
-export async function getPaymentsForProjectIds(projectIds: string[]): Promise<Payment[]> {
+export async function getPaymentsForProjectIds(projectIds: string[]): Promise<PaymentWithProjectMeta[]> {
   if (projectIds.length === 0) return [];
   const f = encodeURIComponent(
     JSON.stringify({
       _and: [{ payment_context: { _eq: PAYMENT_CONTEXT_PROJECT } }, { project: { _in: projectIds } }],
     })
   );
+  const fields = encodeURIComponent("*,project.id,project.project_name");
   const json = await apiJson<{ data: DirectusProjectPaymentRow[] }>(
-    `/items/payments?filter=${f}&limit=-1&sort=-date`
+    `/items/payments?filter=${f}&limit=-1&sort=-date&fields=${fields}`
   );
   const data = json.data;
   const list = Array.isArray(data) ? data : [];
-  return list.map(normalizeProjectPayment);
+  return list.map(normalizeUserPaymentRow);
 }
 
 /** All project-scoped payments (admin aggregates). */

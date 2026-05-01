@@ -1,5 +1,7 @@
 import axios from "axios";
 import { api } from "@/lib/apiClient";
+import type { CustomerPagedRequest, CustomerPagedResult } from "../listing/types";
+import { buildCustomerUserFilter } from "../listing/buildCustomerUserFilter";
 import { getAccessToken } from "@/lib/authToken";
 import {
   assertBelongsToCurrentOrganization,
@@ -77,6 +79,90 @@ function unwrapData<T>(json: { data?: T }): T {
 }
 
 const USERS_FILTER = `filter[dashboard_roles][_eq]=${encodeURIComponent(TRAINING_CLIENT_ROLE)}`;
+
+const HINT_NUMBER_FIELDS = new Set([
+  "age",
+  "currentWeight",
+  "fatPercentage",
+  "current_weight",
+  "fat_percentage",
+]);
+
+/**
+ * Paginated, server-filtered training clients for large orgs (Directus `meta.filter_count`).
+ */
+function usersCollectionQueryString(parts: Record<string, string>): string {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(parts)) {
+    qs.set(k, v);
+  }
+  return qs.toString();
+}
+
+/**
+ * Paginated, server-filtered training clients for large orgs (Directus `meta.filter_count`).
+ * Query must live on the URL path so `apiClient` can merge `organization` into `filter` (it only
+ * reads `filter` from the URL string — `params.filter` alone would duplicate/break Directus).
+ */
+export async function getCustomersPaged(req: CustomerPagedRequest): Promise<CustomerPagedResult> {
+  const filter = buildCustomerUserFilter({ q: req.q, facets: req.facets });
+  const offset = (req.page - 1) * req.pageSize;
+  const query = usersCollectionQueryString({
+    filter: JSON.stringify(filter),
+    fields: "*",
+    limit: String(req.pageSize),
+    offset: String(offset),
+    "meta[]": "filter_count",
+    sort: "email",
+  });
+  const res = await api.get<{ data: Customer[]; meta?: { filter_count?: number } }>(`/users?${query}`);
+  const data = Array.isArray(res.data?.data) ? res.data.data : [];
+  const total =
+    typeof res.data?.meta?.filter_count === "number" ? res.data.meta.filter_count : data.length;
+  const list = data.filter((u) => u.dashboard_roles === TRAINING_CLIENT_ROLE);
+  return { data: list, total };
+}
+
+/** Distinct value hints for adaptive filter dropdowns (bounded). */
+export async function getCustomerFieldValueHints(
+  field: string,
+  needle: string
+): Promise<{ value: string; label: string }[]> {
+  const clauses: Record<string, unknown>[] = [
+    { dashboard_roles: { _eq: TRAINING_CLIENT_ROLE } },
+    { [field]: { _nnull: true } },
+  ];
+  const t = needle.trim();
+  if (t) {
+    if (HINT_NUMBER_FIELDS.has(field)) {
+      const n = Number(t);
+      if (Number.isFinite(n)) clauses.push({ [field]: { _eq: n } });
+    } else {
+      clauses.push({ [field]: { _icontains: t } });
+    }
+  }
+  const filter = clauses.length === 1 ? clauses[0]! : { _and: clauses };
+  const query = usersCollectionQueryString({
+    filter: JSON.stringify(filter),
+    fields: `${field},id`,
+    limit: "80",
+    sort: field,
+  });
+  const res = await api.get<{ data: Record<string, unknown>[] }>(`/users?${query}`);
+  const rows = Array.isArray(res.data?.data) ? res.data.data : [];
+  const seen = new Set<string>();
+  const out: { value: string; label: string }[] = [];
+  for (const r of rows) {
+    const v = r[field];
+    if (v === null || v === undefined) continue;
+    const s = String(v);
+    if (seen.has(s)) continue;
+    seen.add(s);
+    out.push({ value: s, label: s || "—" });
+    if (out.length >= 40) break;
+  }
+  return out;
+}
 
 export async function getCustomers(): Promise<Customer[]> {
   const json = await apiJson<{ data: Customer[] }>(
@@ -242,6 +328,8 @@ export async function syncCustomerProfileFromLatestProgress(userId: string): Pro
 
 export const customerService = {
   getCustomers,
+  getCustomersPaged,
+  getCustomerFieldValueHints,
   getCustomerById,
   createCustomer,
   updateCustomer,

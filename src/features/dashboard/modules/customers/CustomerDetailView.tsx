@@ -18,6 +18,7 @@ import {
 } from "./hooks/useCustomerQueries";
 import { AddProgressCard } from "./AddProgressCard";
 import { ProgressHistoryCard } from "./ProgressHistoryCard";
+import { CUSTOMER_GOAL_OPTIONS, formatCustomerGoalLabel } from "./goalConstants";
 import { readCustomerWeight, readCustomerFatPct } from "./types";
 import { computePaymentScheduleInfo } from "./utils/paymentSchedule";
 import { useCustomerDetailFormState } from "./useCustomerDetailFormState";
@@ -194,8 +195,16 @@ export function CustomerDetailView({ customerId, mode, compact }: CustomerDetail
       </div>
       <div>
         <dt className="text-xs text-muted-foreground">Goal</dt>
-        <dd className="font-medium text-foreground mt-0.5">
-          {typeof customer.goal === "string" && customer.goal ? customer.goal : "—"}
+        <dd className="mt-0.5 font-medium text-foreground">
+          {typeof customer.goal === "string" && customer.goal ? (
+            CUSTOMER_GOAL_OPTIONS.some((o) => o.value === customer.goal) ? (
+              <StatusBadge status={customer.goal} />
+            ) : (
+              <span>{formatCustomerGoalLabel(customer.goal)}</span>
+            )
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
         </dd>
       </div>
       <div>
@@ -359,12 +368,25 @@ export function CustomerDetailView({ customerId, mode, compact }: CustomerDetail
                 </div>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground">Goal (e.g. weight_loss)</label>
-                <input
+                <label className="text-xs text-muted-foreground">Goal</label>
+                <select
                   value={edit.goal}
                   onChange={(e) => setEdit((s) => ({ ...s, goal: e.target.value }))}
                   className="mt-1 h-10 w-full rounded-lg border border-border bg-secondary/50 px-3 text-sm outline-none focus:border-primary/40"
-                />
+                >
+                  <option value="">Not set</option>
+                  {CUSTOMER_GOAL_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                  {edit.goal.trim() &&
+                    !CUSTOMER_GOAL_OPTIONS.some((o) => o.value === edit.goal) && (
+                      <option value={edit.goal}>
+                        {formatCustomerGoalLabel(edit.goal)} (saved)
+                      </option>
+                    )}
+                </select>
               </div>
               <div>
                 <label className="text-xs text-muted-foreground">Subscription</label>

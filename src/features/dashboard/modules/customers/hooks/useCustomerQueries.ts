@@ -10,6 +10,7 @@ import {
   computeProgressStats,
 } from "@/features/dashboard/selectors";
 import * as customerService from "../services/customerService";
+import type { CustomerPagedRequest } from "../listing/types";
 import type {
   CreateCustomerPayload,
   CreatePaymentPayload,
@@ -29,6 +30,21 @@ export const customerKeys = {
   payments: (userId: string) => [...customerKeys.all, "payments", userId] as const,
 };
 
+function stableFacetKey(facets: Record<string, string[]>) {
+  return JSON.stringify(
+    Object.keys(facets)
+      .sort()
+      .reduce<Record<string, string[]>>((acc, k) => {
+        acc[k] = [...(facets[k] ?? [])].sort();
+        return acc;
+      }, {})
+  );
+}
+
+export function customerPagedQueryKey(args: CustomerPagedRequest) {
+  return [...customerKeys.all, "paged", args.page, args.pageSize, args.q, stableFacetKey(args.facets)] as const;
+}
+
 export function progressUserId(p: FitnessProgress, fallback: string): string {
   if (typeof p.user === "string") return p.user;
   return p.user?.id ?? fallback;
@@ -42,6 +58,23 @@ export function fitnessToProgressEntry(p: FitnessProgress, fallbackUserId: strin
     weight: Number(p.weight ?? 0),
     fatPercentage: Number(p.fat_percentage ?? p.fatPercentage ?? 0),
   };
+}
+
+export function useCustomersPaged(args: CustomerPagedRequest) {
+  return useQuery({
+    queryKey: customerPagedQueryKey(args),
+    queryFn: () => customerService.getCustomersPaged(args),
+    placeholderData: (previousData) => previousData,
+  });
+}
+
+/** Sample slice for adaptive filter discovery (cached; invalidated with `customerKeys.all`). */
+export function useCustomerFacetSamples() {
+  return useQuery({
+    queryKey: [...customerKeys.all, "facet-samples"] as const,
+    queryFn: () => customerService.getCustomersPaged({ page: 1, pageSize: 200, q: "", facets: {} }),
+    staleTime: 5 * 60_000,
+  });
 }
 
 export function useCustomers(statusFilter: "all" | "active" | "inactive" = "all") {
@@ -122,7 +155,7 @@ export function useCreateCustomer() {
   return useMutation({
     mutationFn: (data: CreateCustomerPayload) => customerService.createCustomer(data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: customerKeys.list() });
+      qc.invalidateQueries({ queryKey: customerKeys.all });
     },
   });
 }
@@ -133,7 +166,7 @@ export function useUpdateCustomer() {
     mutationFn: ({ id, data }: { id: string; data: UpdateCustomerPayload }) =>
       customerService.updateCustomer(id, data),
     onSuccess: (_u, { id }) => {
-      qc.invalidateQueries({ queryKey: customerKeys.list() });
+      qc.invalidateQueries({ queryKey: customerKeys.all });
       qc.invalidateQueries({ queryKey: customerKeys.detail(id) });
     },
   });
@@ -144,7 +177,7 @@ export function useDeleteCustomer() {
   return useMutation({
     mutationFn: (id: string) => customerService.deleteCustomer(id),
     onSuccess: (_, id) => {
-      qc.invalidateQueries({ queryKey: customerKeys.list() });
+      qc.invalidateQueries({ queryKey: customerKeys.all });
       qc.removeQueries({ queryKey: customerKeys.detail(id) });
     },
   });
@@ -161,7 +194,7 @@ export function useAddProgress() {
     onSuccess: (_row, vars) => {
       qc.invalidateQueries({ queryKey: customerKeys.progress(vars.user) });
       qc.invalidateQueries({ queryKey: customerKeys.detail(vars.user) });
-      qc.invalidateQueries({ queryKey: customerKeys.list() });
+      qc.invalidateQueries({ queryKey: customerKeys.all });
       invalidateFitnessBulk(qc);
     },
   });
@@ -186,7 +219,7 @@ export function useUpdateProgress() {
     onSuccess: (_row, { userId }) => {
       qc.invalidateQueries({ queryKey: customerKeys.progress(userId) });
       qc.invalidateQueries({ queryKey: customerKeys.detail(userId) });
-      qc.invalidateQueries({ queryKey: customerKeys.list() });
+      qc.invalidateQueries({ queryKey: customerKeys.all });
       invalidateFitnessBulk(qc);
     },
   });

@@ -18,17 +18,12 @@ import { SectionHeader } from "../components/SectionHeader";
 import { StatusBadge } from "../components/StatusBadge";
 import { useAuth } from "../../Login/useAuth";
 import { useCustomer, useCustomerPayments, useProgress } from "./customers/hooks/useCustomerQueries";
+import { customerGoalBadgeKey, formatCustomerGoalLabel } from "./customers/goalConstants";
 import { readCustomerWeight, readCustomerFatPct } from "./customers/types";
 import { sumPaymentsByType } from "./customers/utils/paymentTotals";
 
 const formatCurrency = (n: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
-
-function goalBadgeStatus(goal: string | null | undefined): string {
-  if (goal === "weight_loss" || goal === "weight_gain") return goal;
-  if (goal && String(goal).length > 0) return "planning";
-  return "planning";
-}
 
 /** Training-client overview only. Franchise clients use `/features/dashboard/modules/franchise`. */
 export const ClientOverview = () => {
@@ -49,14 +44,10 @@ export const ClientOverview = () => {
     [entries]
   );
 
-  const goalLabel =
-    profile?.goal === "weight_loss"
-      ? "Goal: lose weight"
-      : profile?.goal === "weight_gain"
-        ? "Goal: gain weight"
-        : profile?.goal
-          ? `Goal: ${String(profile.goal).replace(/_/g, " ")}`
-          : "Set your goal with your coach";
+  const goalStr = typeof profile?.goal === "string" ? profile.goal.trim() : "";
+  const goalLabel = goalStr
+    ? `Goal: ${formatCustomerGoalLabel(goalStr)}`
+    : "Set your goal with your coach";
 
   return (
     <div className="space-y-10 max-w-7xl">
@@ -137,7 +128,7 @@ export const ClientOverview = () => {
             trending between sessions.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-2">
-            <StatusBadge status={goalBadgeStatus(typeof profile?.goal === "string" ? profile.goal : null)} />
+            <StatusBadge status={customerGoalBadgeKey(typeof profile?.goal === "string" ? profile.goal : null)} />
             {profile?.subscription ? (
               <span className="rounded-full border border-border/60 bg-secondary/30 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
                 {String(profile.subscription)}
