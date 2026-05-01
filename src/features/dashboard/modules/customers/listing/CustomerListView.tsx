@@ -69,7 +69,8 @@ export function CustomerListView({ url, listQuery, facetSamples, facetSamplesPen
     () => Object.values(url.facets).some((arr) => arr.length > 0),
     [url.facets]
   );
-  const hasActiveFilters = Boolean(url.qCommitted.trim()) || hasFacetFilters;
+  const hasActiveFilters =
+    Boolean(url.qCommitted.trim()) || hasFacetFilters || url.billingFilter !== "all";
 
   return (
     <div className="space-y-4">
@@ -79,7 +80,7 @@ export function CustomerListView({ url, listQuery, facetSamples, facetSamplesPen
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       >
         {showFilterSkeleton ? (
-          <CustomerFilterBarSkeleton count={3} />
+          <CustomerFilterBarSkeleton count={4} />
         ) : (
           <div className="rounded-xl border border-border/60 bg-muted/10 p-3 sm:p-3.5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between lg:gap-4">
@@ -110,6 +111,19 @@ export function CustomerListView({ url, listQuery, facetSamples, facetSamplesPen
                       loadOptions={meta.asyncOptions ? loadHints(meta.field) : undefined}
                     />
                   ))}
+                  <AsyncFilterDropdown
+                    label="Payment"
+                    mode="single"
+                    selected={url.billingFilter === "all" ? [] : [url.billingFilter]}
+                    onChange={(next) => {
+                      const v = next[0];
+                      url.setBillingFilter(v === "paid" || v === "pending" ? v : "all");
+                    }}
+                    staticOptions={[
+                      { value: "pending", label: "Pending" },
+                      { value: "paid", label: "Paid" },
+                    ]}
+                  />
                   {hasActiveFilters && (
                     <Button
                       type="button"

@@ -42,7 +42,15 @@ function stableFacetKey(facets: Record<string, string[]>) {
 }
 
 export function customerPagedQueryKey(args: CustomerPagedRequest) {
-  return [...customerKeys.all, "paged", args.page, args.pageSize, args.q, stableFacetKey(args.facets)] as const;
+  return [
+    ...customerKeys.all,
+    "paged",
+    args.page,
+    args.pageSize,
+    args.q,
+    stableFacetKey(args.facets),
+    args.billingFilter,
+  ] as const;
 }
 
 export function progressUserId(p: FitnessProgress, fallback: string): string {
@@ -72,7 +80,8 @@ export function useCustomersPaged(args: CustomerPagedRequest) {
 export function useCustomerFacetSamples() {
   return useQuery({
     queryKey: [...customerKeys.all, "facet-samples"] as const,
-    queryFn: () => customerService.getCustomersPaged({ page: 1, pageSize: 200, q: "", facets: {} }),
+    queryFn: () =>
+      customerService.getCustomersPaged({ page: 1, pageSize: 200, q: "", facets: {}, billingFilter: "all" }),
     staleTime: 5 * 60_000,
   });
 }

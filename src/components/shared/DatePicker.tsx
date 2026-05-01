@@ -46,16 +46,29 @@ export function DatePicker({
           variant="outline"
           disabled={disabled}
           className={cn(
-            "h-10 w-full justify-start text-left font-normal rounded-lg border-border bg-secondary/50",
+            "h-11 min-h-[2.75rem] w-full min-w-0 justify-start gap-2 text-left font-normal rounded-lg border-border bg-secondary/50 px-3",
             !selected && "text-muted-foreground",
             className
           )}
         >
-          <CalendarIcon className="mr-2 h-4 w-4 shrink-0 opacity-60" aria-hidden />
-          {selected ? format(selected, "PPP") : <span>{placeholder}</span>}
+          <CalendarIcon className="h-4 w-4 shrink-0 opacity-60" aria-hidden />
+          {selected ? (
+            <span className="min-w-0 truncate">
+              <span className="hidden sm:inline">{format(selected, "PPP")}</span>
+              <span className="sm:hidden">{format(selected, "MMM d, yyyy")}</span>
+            </span>
+          ) : (
+            <span className="truncate">{placeholder}</span>
+          )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent
+        className="w-auto max-w-[min(calc(100vw-1.25rem),20rem)] p-0 sm:max-w-none"
+        align="start"
+        side="bottom"
+        sideOffset={6}
+        collisionPadding={12}
+      >
         <Calendar
           mode="single"
           selected={selected}

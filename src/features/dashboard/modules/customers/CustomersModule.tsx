@@ -29,8 +29,9 @@ export const CustomersModule = () => {
       pageSize: url.pageSize,
       q: url.qCommitted,
       facets: url.facets,
+      billingFilter: url.billingFilter,
     }),
-    [url.page, url.pageSize, url.qCommitted, url.facets]
+    [url.page, url.pageSize, url.qCommitted, url.facets, url.billingFilter]
   );
 
   const listQuery = useCustomersPaged(pagedRequest);

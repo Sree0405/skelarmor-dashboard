@@ -1,5 +1,6 @@
 import type { ProgressEntry, GymProject, Payment } from "../types";
 import type { Customer } from "../modules/customers/types";
+import { filterProgressInCalendarMonthWindow } from "../utils/progressChartSeries";
 
 // ── Customer Selectors ──
 
@@ -31,13 +32,7 @@ export const selectProgressInRange = (
   progress: ProgressEntry[],
   customerId: string,
   months: number
-) => {
-  const cutoff = new Date();
-  cutoff.setMonth(cutoff.getMonth() - months);
-  return progress
-    .filter((p) => p.customerId === customerId && new Date(p.date) >= cutoff)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-};
+) => filterProgressInCalendarMonthWindow(progress, customerId, months);
 
 export const selectLatestProgress = (progress: ProgressEntry[], customerId: string) => {
   const sorted = selectProgressByCustomer(progress, customerId);

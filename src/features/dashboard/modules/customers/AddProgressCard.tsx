@@ -72,7 +72,7 @@ export function AddProgressCard({
               id={datePickerId}
               value={date}
               onChange={setDate}
-              placeholder="Select check-in date"
+              placeholder="Select Progress date"
             />
           </div>
         </div>

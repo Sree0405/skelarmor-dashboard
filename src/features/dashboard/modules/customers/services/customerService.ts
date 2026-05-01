@@ -2,6 +2,7 @@ import axios from "axios";
 import { api } from "@/lib/apiClient";
 import type { CustomerPagedRequest, CustomerPagedResult } from "../listing/types";
 import { buildCustomerUserFilter } from "../listing/buildCustomerUserFilter";
+import { getPaymentStatus } from "../utils/paymentSchedule";
 import { getAccessToken } from "@/lib/authToken";
 import {
   assertBelongsToCurrentOrganization,
@@ -105,6 +106,9 @@ function usersCollectionQueryString(parts: Record<string, string>): string {
  * reads `filter` from the URL string — `params.filter` alone would duplicate/break Directus).
  */
 export async function getCustomersPaged(req: CustomerPagedRequest): Promise<CustomerPagedResult> {
+  if (req.billingFilter !== "all") {
+    return getCustomersPagedByBilling(req);
+  }
   const filter = buildCustomerUserFilter({ q: req.q, facets: req.facets });
   const offset = (req.page - 1) * req.pageSize;
   const query = usersCollectionQueryString({
@@ -121,6 +125,48 @@ export async function getCustomersPaged(req: CustomerPagedRequest): Promise<Cust
     typeof res.data?.meta?.filter_count === "number" ? res.data.meta.filter_count : data.length;
   const list = data.filter((u) => u.dashboard_roles === TRAINING_CLIENT_ROLE);
   return { data: list, total };
+}
+
+function paymentsOwnerId(p: CustomerPayment): string | undefined {
+  if (typeof p.user === "string") return p.user;
+  return p.user?.id;
+}
+
+/**
+ * Full list matching server facets, then filter by computed billing status and slice page.
+ */
+async function getCustomersPagedByBilling(req: CustomerPagedRequest): Promise<CustomerPagedResult> {
+  const want = req.billingFilter;
+  if (want !== "paid" && want !== "pending") {
+    return getCustomersPaged({ ...req, billingFilter: "all" });
+  }
+  const filter = buildCustomerUserFilter({ q: req.q, facets: req.facets });
+  const query = usersCollectionQueryString({
+    filter: JSON.stringify(filter),
+    fields: "*",
+    limit: "-1",
+    sort: "email",
+  });
+  const res = await api.get<{ data: Customer[] }>(`/users?${query}`);
+  const data = Array.isArray(res.data?.data) ? res.data.data : [];
+  const all = data.filter((u) => u.dashboard_roles === TRAINING_CLIENT_ROLE);
+  const ids = all.map((c) => c.id);
+  const bulkPayments = await getPaymentsForUsers(ids);
+  const byUser = new Map<string, CustomerPayment[]>();
+  for (const p of bulkPayments) {
+    const uid = paymentsOwnerId(p);
+    if (!uid) continue;
+    const list = byUser.get(uid) ?? [];
+    list.push(p);
+    byUser.set(uid, list);
+  }
+  const matching = all.filter((c) => getPaymentStatus(c, byUser.get(c.id) ?? []) === want);
+  const total = matching.length;
+  const offset = (req.page - 1) * req.pageSize;
+  return {
+    data: matching.slice(offset, offset + req.pageSize),
+    total,
+  };
 }
 
 /** Distinct value hints for adaptive filter dropdowns (bounded). */
@@ -245,15 +291,23 @@ export async function getCustomerPayments(userId: string): Promise<CustomerPayme
   return Array.isArray(data) ? data : [];
 }
 
+const PAYMENTS_USER_ID_BATCH = 200;
+
 /** Payments for many users (e.g. customer list). Empty `userIds` returns []. */
 export async function getPaymentsForUsers(userIds: string[]): Promise<CustomerPayment[]> {
   if (userIds.length === 0) return [];
-  const filter = encodeURIComponent(JSON.stringify({ user: { _in: userIds } }));
-  const json = await apiJson<{ data: CustomerPayment[] }>(
-    `/items/payments?filter=${filter}&limit=-1&sort=-date`
-  );
-  const data = json.data;
-  return Array.isArray(data) ? data : [];
+  const unique = [...new Set(userIds)];
+  const out: CustomerPayment[] = [];
+  for (let i = 0; i < unique.length; i += PAYMENTS_USER_ID_BATCH) {
+    const chunk = unique.slice(i, i + PAYMENTS_USER_ID_BATCH);
+    const filter = encodeURIComponent(JSON.stringify({ user: { _in: chunk } }));
+    const json = await apiJson<{ data: CustomerPayment[] }>(
+      `/items/payments?filter=${filter}&limit=-1&sort=-date`
+    );
+    const data = json.data;
+    if (Array.isArray(data)) out.push(...data);
+  }
+  return out;
 }
 
 export async function addPayment(data: CreatePaymentPayload): Promise<CustomerPayment> {

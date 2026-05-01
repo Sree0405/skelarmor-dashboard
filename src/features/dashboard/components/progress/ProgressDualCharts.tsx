@@ -1,18 +1,26 @@
 import type { ReactNode } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import type { ProgressChartRow } from "../../utils/progressChartSeries";
 import { GlassCard } from "../GlassCard";
 import { ProgressChartTooltip } from "./ProgressChartTooltip";
 
-type Row = {
-  id: string;
-  label: string;
-  weight: number;
-  fatPercentage: number;
-};
+function yExtent(
+  values: (number | null | undefined)[],
+  pad: number,
+  fallback: [number, number]
+): [number, number] {
+  const finite = values.filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+  if (finite.length === 0) return fallback;
+  const min = Math.min(...finite);
+  const max = Math.max(...finite);
+  if (min === max) return [min - pad, max + pad];
+  return [min - pad, max + pad];
+}
 
 type Props = {
-  chartData: Row[];
+  chartData: ProgressChartRow[];
   leftDelay?: number;
   rightDelay?: number;
   /** "client" shortens copy slightly */
@@ -57,6 +65,23 @@ export function ProgressDualCharts({ chartData, leftDelay = 0.22, rightDelay = 0
     variant === "client" ? "Your weight trend (kg)" : "Body weight trend for the selected client (kg)";
   const fatDesc = variant === "client" ? "Body fat % trend" : "Body fat % trend for the selected client";
 
+  const weightDomain = useMemo(
+    () => yExtent(
+      chartData.map((r) => r.weight),
+      2,
+      [65, 95]
+    ),
+    [chartData]
+  );
+  const fatDomain = useMemo(
+    () => yExtent(
+      chartData.map((r) => r.fatPercentage),
+      2,
+      [12, 28]
+    ),
+    [chartData]
+  );
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <PremiumChartCard
@@ -77,7 +102,7 @@ export function ProgressDualCharts({ chartData, leftDelay = 0.22, rightDelay = 0
                 tickMargin={10}
               />
               <YAxis
-                domain={["dataMin - 2", "dataMax + 2"]}
+                domain={weightDomain}
                 tick={{ fill: "hsl(215 12% 52%)", fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
@@ -85,11 +110,12 @@ export function ProgressDualCharts({ chartData, leftDelay = 0.22, rightDelay = 0
               />
               <Tooltip content={<ProgressChartTooltip />} cursor={{ stroke: "hsl(215 90% 58% / 0.25)", strokeWidth: 1 }} />
               <Line
-                type="monotone"
+                type="linear"
                 dataKey="weight"
                 name="Weight"
                 stroke="hsl(215 90% 58%)"
                 strokeWidth={2.5}
+                connectNulls={false}
                 dot={{ fill: "hsl(215 90% 58%)", r: 4, strokeWidth: 0 }}
                 activeDot={{ r: 6, strokeWidth: 0 }}
               />
@@ -116,7 +142,7 @@ export function ProgressDualCharts({ chartData, leftDelay = 0.22, rightDelay = 0
                 tickMargin={10}
               />
               <YAxis
-                domain={["dataMin - 2", "dataMax + 2"]}
+                domain={fatDomain}
                 tick={{ fill: "hsl(215 12% 52%)", fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
@@ -124,11 +150,12 @@ export function ProgressDualCharts({ chartData, leftDelay = 0.22, rightDelay = 0
               />
               <Tooltip content={<ProgressChartTooltip />} cursor={{ stroke: "hsl(43 85% 55% / 0.25)", strokeWidth: 1 }} />
               <Line
-                type="monotone"
+                type="linear"
                 dataKey="fatPercentage"
                 name="Fat %"
                 stroke="hsl(43 85% 55%)"
                 strokeWidth={2.5}
+                connectNulls={false}
                 dot={{ fill: "hsl(43 85% 55%)", r: 4, strokeWidth: 0 }}
                 activeDot={{ r: 6, strokeWidth: 0 }}
               />

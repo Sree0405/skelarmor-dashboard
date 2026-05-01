@@ -6,6 +6,7 @@ import { SectionHeader } from "../components/SectionHeader";
 import { ProgressDualCharts } from "../components/progress/ProgressDualCharts";
 import { ProgressInsightCards } from "../components/progress/ProgressInsightCards";
 import { ProgressRangeToggle, type ProgressTimeRange } from "../components/progress/ProgressRangeToggle";
+import { buildMonthlyProgressChartData } from "../utils/progressChartSeries";
 import {
   useCustomers,
   useProgress,
@@ -32,12 +33,8 @@ export const ProgressModule = () => {
   }, [activeCustomers, selectedId]);
 
   const chartData = useMemo(
-    () =>
-      entries.map((p) => ({
-        ...p,
-        label: new Date(p.date).toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
-      })),
-    [entries]
+    () => buildMonthlyProgressChartData(entries, filterMonths[timeFilter]),
+    [entries, timeFilter]
   );
 
   return (

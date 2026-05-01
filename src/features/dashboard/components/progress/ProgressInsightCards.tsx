@@ -103,7 +103,7 @@ type Props = {
 
 export function ProgressInsightCards({
   stats,
-  countLabel = "Check-ins",
+  countLabel = "Progress",
   countSublabel = "In selected range",
   delays = [0.08, 0.12, 0.16],
 }: Props) {

@@ -1,5 +1,8 @@
 import type { Customer } from "../types";
 
+/** Derived from subscription + payments; not a Directus `users` field. */
+export type BillingFilter = "all" | "paid" | "pending";
+
 /** Server-driven list request (URL + toolbar state maps here). */
 export type CustomerPagedRequest = {
   page: number;
@@ -11,6 +14,11 @@ export type CustomerPagedRequest = {
    * Built into Directus `_in` / `_eq` clauses — no hardcoded field list in the UI layer.
    */
   facets: Record<string, string[]>;
+  /**
+   * When not `all`, loads all rows matching `q` + `facets`, merges payments, filters by
+   * `getPaymentStatus`, then paginates in-app (billing is not expressible in `/users` filter).
+   */
+  billingFilter: BillingFilter;
 };
 
 export type CustomerPagedResult = {

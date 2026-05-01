@@ -94,7 +94,7 @@ export const ClientOverview = () => {
                 ? `${profileFat}%`
                 : "—"
           }
-          sublabel="Latest check-in or profile"
+          sublabel="Latest Progress or profile"
           icon={Target}
           accent="amber"
           delay={0.06}
@@ -124,7 +124,7 @@ export const ClientOverview = () => {
             Profile focus
           </div>
           <p className="mt-4 text-sm leading-relaxed text-foreground/85">
-            Stay consistent with check-ins so your coach can tune your programme. Recent entries show how you are
+            Stay consistent with Progress so your coach can tune your programme. Recent entries show how you are
             trending between sessions.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-2">
@@ -142,7 +142,7 @@ export const ClientOverview = () => {
             <div>
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-primary" />
-                Recent check-ins
+                Recent Progress
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">Last five logged sessions</p>
             </div>
@@ -171,7 +171,7 @@ export const ClientOverview = () => {
                           year: "numeric",
                         })}
                       </p>
-                      <p className="text-xs text-muted-foreground">Logged check-in</p>
+                      <p className="text-xs text-muted-foreground">Logged Progress</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-6 sm:pr-1">
@@ -188,7 +188,7 @@ export const ClientOverview = () => {
               ))
             ) : (
               <div className="rounded-2xl border border-dashed border-border/70 bg-secondary/10 px-6 py-14 text-center">
-                <p className="text-sm text-muted-foreground">No check-ins yet. Your coach will log progress after sessions.</p>
+                <p className="text-sm text-muted-foreground">No Progress yet. Your coach will log progress after sessions.</p>
                 <Button variant="link" className="mt-2 text-primary" asChild>
                   <Link to="/dashboard/training/progress">Open progress</Link>
                 </Button>

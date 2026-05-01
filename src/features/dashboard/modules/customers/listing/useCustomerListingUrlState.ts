@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import type { BillingFilter } from "./types";
 import { useDebouncedValue } from "./useDebouncedValue";
+
+function parseBilling(raw: string | null): BillingFilter {
+  if (raw === "paid" || raw === "pending") return raw;
+  return "all";
+}
 
 export const CUSTOMER_LIST_PAGE_SIZES = [10, 25, 50, 100] as const;
 
@@ -44,6 +50,7 @@ function serializeFilters(f: Record<string, string[]>): string | null {
  * - `ps` — page size (10 | 25 | 50 | 100)
  * - `q` — server search string (updated from debounced draft)
  * - `filters` — URL-encoded JSON map of `{ field: string[] }`
+ * - `billing` — optional `paid` | `pending` (subscription billing vs payments); omit = all
  */
 export function useCustomerListingUrlState() {
   const [params, setParams] = useSearchParams();
@@ -53,6 +60,8 @@ export function useCustomerListingUrlState() {
   const qCommitted = params.get("q") ?? "";
   const filtersParam = params.get("filters");
   const facets = useMemo(() => parseFilters(filtersParam), [filtersParam]);
+  const billingParam = params.get("billing");
+  const billingFilter = useMemo(() => parseBilling(billingParam), [billingParam]);
 
   const [searchDraft, setSearchDraft] = useState(qCommitted);
   const debouncedSearch = useDebouncedValue(searchDraft, 400);
@@ -111,9 +120,21 @@ export function useCustomerListingUrlState() {
     [facets, setFacets]
   );
 
+  const setBillingFilter = useCallback(
+    (f: BillingFilter) => {
+      const next = new URLSearchParams(params);
+      if (f === "all") next.delete("billing");
+      else next.set("billing", f);
+      next.set("page", "1");
+      setParams(next, { replace: true });
+    },
+    [params, setParams]
+  );
+
   const clearAllFilters = useCallback(() => {
     const next = new URLSearchParams(params);
     next.delete("filters");
+    next.delete("billing");
     next.delete("q");
     next.set("page", "1");
     setSearchDraft("");
@@ -129,6 +150,8 @@ export function useCustomerListingUrlState() {
     setSearchDraft,
     facets,
     updateFacet,
+    billingFilter,
+    setBillingFilter,
     setPage,
     setPageSize,
     clearAllFilters,

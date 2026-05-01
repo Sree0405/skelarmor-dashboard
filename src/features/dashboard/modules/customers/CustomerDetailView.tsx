@@ -308,7 +308,7 @@ export function CustomerDetailView({ customerId, mode, compact }: CustomerDetail
           </GlassCard>
           <AddProgressCard
             userId={customerId}
-            title="Log your check-in"
+            title="Log your Progress"
             description="Choose a date and enter your weight and body fat %."
             datePickerId="training-detail-progress-date"
           />

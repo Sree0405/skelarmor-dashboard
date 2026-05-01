@@ -40,9 +40,9 @@ export function AddProjectPaymentForm({ projectId }: Props) {
   };
 
   return (
-    <GlassCard className="p-6" hoverable={false}>
+    <GlassCard className="p-4 sm:p-6" hoverable={false}>
       <h3 className="text-sm font-semibold text-foreground mb-4">Add payment</h3>
-      <form onSubmit={onSubmit} className="space-y-3 max-w-lg">
+      <form onSubmit={onSubmit} className="space-y-3 w-full max-w-lg min-w-0">
         <div>
           <label htmlFor="proj-pay-date" className="text-xs text-muted-foreground">
             Date

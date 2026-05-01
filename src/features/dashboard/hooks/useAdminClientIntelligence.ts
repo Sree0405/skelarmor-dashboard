@@ -16,7 +16,10 @@ import {
   usePaymentsForCustomerIds,
 } from "@/features/dashboard/modules/customers/hooks/useCustomerQueries";
 import type { Customer, CustomerPayment, FitnessProgress } from "@/features/dashboard/modules/customers/types";
-import { computePaymentScheduleInfo } from "@/features/dashboard/modules/customers/utils/paymentSchedule";
+import {
+  computePaymentScheduleInfo,
+  getPaymentStatus,
+} from "@/features/dashboard/modules/customers/utils/paymentSchedule";
 
 export type ClientIntelTrend = { direction: "up" | "down" | "flat"; label: string };
 
@@ -120,14 +123,12 @@ function computeCards(
     if (isWithinInterval(cd, { start: prevMonthStart, end: prevMonthEnd })) joinsLastMonth++;
   }
 
+  /** Active clients on a subscription plan whose billing is pending (unpaid / overdue vs plan). */
   let atRisk = 0;
   for (const c of activeList) {
-    const last = lastProgressByUser.get(c.id);
-    if (last == null) {
-      atRisk++;
-      continue;
-    }
-    if (differenceInCalendarDays(today, last) >= 5) atRisk++;
+    if (c.subscription == null || String(c.subscription).trim() === "") continue;
+    const pays = byUserPayments.get(c.id) ?? [];
+    if (getPaymentStatus(c, pays) === "pending") atRisk++;
   }
 
   type Soon = { customer: Customer; days: number };
@@ -217,7 +218,10 @@ function computeCards(
     id: "risk",
     title: "At-risk",
     metric: `${atRisk}`,
-    insight: atRisk === 0 ? "No silent clients" : "No log in 5+ days",
+    insight:
+      atRisk === 0
+        ? "All billed clients current"
+        : "Unpaid or overdue vs subscription",
     accent: atRisk === 0 ? "good" : "risk",
   };
 
@@ -241,7 +245,7 @@ function computeCards(
     metric: topCust && bestCount > 0 ? customerDisplayName(topCust) : "—",
     insight:
       bestCount > 0
-        ? `${bestCount} check-in${bestCount === 1 ? "" : "s"} · rolling 7d`
+        ? `${bestCount} Progress${bestCount === 1 ? "" : "s"} · rolling 7d`
         : "Log activity to rank",
     accent: bestCount > 0 ? "good" : "neutral",
   };

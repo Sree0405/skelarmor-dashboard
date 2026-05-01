@@ -7,6 +7,7 @@ import { ProgressDualCharts } from "../components/progress/ProgressDualCharts";
 import { ProgressInsightCards } from "../components/progress/ProgressInsightCards";
 import { ProgressRangeToggle, type ProgressTimeRange } from "../components/progress/ProgressRangeToggle";
 import { useAuth } from "../../Login/useAuth";
+import { buildMonthlyProgressChartData } from "../utils/progressChartSeries";
 import { useProgress } from "./customers/hooks/useCustomerQueries";
 import { AddProgressCard } from "./customers/AddProgressCard";
 import { ProgressHistoryCard } from "./customers/ProgressHistoryCard";
@@ -19,12 +20,8 @@ export const ClientProgress = () => {
   const { entries, stats } = useProgress(user?.id, filterMonths[timeFilter]);
 
   const chartData = useMemo(
-    () =>
-      entries.map((p) => ({
-        ...p,
-        label: new Date(p.date).toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
-      })),
-    [entries]
+    () => buildMonthlyProgressChartData(entries, filterMonths[timeFilter]),
+    [entries, timeFilter]
   );
 
   return (
@@ -37,7 +34,7 @@ export const ClientProgress = () => {
       >
         <SectionHeader
           title="My progress"
-          description="Track weight and body fat over time. Log check-ins to keep your charts meaningful."
+          description="Track weight and body fat over time. Log Progress to keep your charts meaningful."
         />
         <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
           <LineChart className="h-4 w-4 text-primary shrink-0" />
@@ -47,7 +44,7 @@ export const ClientProgress = () => {
 
       <AddProgressCard
         userId={user?.id}
-        title="Log a check-in"
+        title="Log a Progress"
         description="Add weight and body fat % for any date — your charts refresh automatically."
         datePickerId="client-progress-checkin-date"
       />
@@ -62,7 +59,7 @@ export const ClientProgress = () => {
       {stats && (
         <ProgressInsightCards
           stats={stats}
-          countLabel="Check-ins"
+          countLabel="Progress"
           countSublabel="In selected window"
           delays={[0.1, 0.14, 0.18]}
         />

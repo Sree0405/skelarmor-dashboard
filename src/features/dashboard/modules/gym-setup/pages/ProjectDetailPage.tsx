@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { GlassCard } from "@/features/dashboard/components/GlassCard";
 import { SectionHeader } from "@/features/dashboard/components/SectionHeader";
 import { ProgressBar } from "@/features/dashboard/components/ProgressBar";
@@ -46,7 +47,7 @@ export function ProjectDetailPage() {
   const [start_date, setStartDate] = useState("");
   const [end_date, setEndDate] = useState("");
   const [description, setDescription] = useState("");
-  const [progress, setProgress] = useState("0");
+  const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("ongoing");
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export function ProjectDetailPage() {
     setStartDate(project.startDate?.slice(0, 10) ?? "");
     setEndDate(project.endDate?.slice(0, 10) ?? "");
     setDescription(project.description ?? "");
-    setProgress(String(project.progress));
+    setProgress(Math.min(100, Math.max(0, Number(project.progress ?? 0))));
     setStatus(project.status);
   }, [project]);
 
@@ -72,11 +73,7 @@ export function ProjectDetailPage() {
     const total = Number(total_amount);
     const paid = Number(paid_amount);
     const pending = Number(pending_amount);
-    const prog = Number(progress);
-    if (Number.isNaN(prog) || prog < 0 || prog > 100) {
-      toast.error("Progress must be 0–100.");
-      return;
-    }
+    const prog = progress;
     try {
       await updateMut.mutateAsync({
         id: projectId,
@@ -125,26 +122,28 @@ export function ProjectDetailPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
+    <div className="space-y-6 sm:space-y-8 w-full min-w-0 max-w-full overflow-x-hidden">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between min-w-0">
+        <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
           <Button variant="ghost" size="icon" asChild className="shrink-0 mt-0.5">
             <Link to="/dashboard/admin/gym-setup" aria-label="Back">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <SectionHeader title={project.projectName || "Project"} description={project.clientName} />
+          <div className="min-w-0 flex-1">
+            <SectionHeader title={project.projectName || "Project"} description={project.clientName} />
+          </div>
         </div>
       </div>
 
-      <GlassCard className="p-6" hoverable={false}>
+      <GlassCard className="p-4 sm:p-6" hoverable={false}>
         <p className="text-xs text-muted-foreground mb-2">Completion</p>
         <ProgressBar value={project.progress} />
       </GlassCard>
 
-      <GlassCard className="p-6 max-w-2xl" hoverable={false}>
+      <GlassCard className="p-4 sm:p-6 w-full max-w-2xl" hoverable={false}>
         <h3 className="text-sm font-semibold text-foreground mb-4">Edit project</h3>
-        <form onSubmit={onSave} className="space-y-4">
+        <form onSubmit={onSave} className="space-y-4 min-w-0">
           <div>
             <label className="text-xs text-muted-foreground">Project name</label>
             <input
@@ -169,8 +168,8 @@ export function ProjectDetailPage() {
               ))}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="min-w-0">
               <label className="text-xs text-muted-foreground">City</label>
               <input
                 value={location_city}
@@ -178,7 +177,7 @@ export function ProjectDetailPage() {
                 className="mt-1 h-10 w-full rounded-lg border border-border bg-secondary/50 px-3 text-sm outline-none focus:border-primary/40"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <label className="text-xs text-muted-foreground">Country</label>
               <input
                 value={location_country}
@@ -187,8 +186,8 @@ export function ProjectDetailPage() {
               />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="min-w-0">
               <label className="text-xs text-muted-foreground">Total (INR)</label>
               <input
                 value={total_amount}
@@ -197,7 +196,7 @@ export function ProjectDetailPage() {
                 className="mt-1 h-10 w-full rounded-lg border border-border bg-secondary/50 px-3 text-sm outline-none focus:border-primary/40"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <label className="text-xs text-muted-foreground">Paid (INR)</label>
               <input
                 value={paid_amount}
@@ -206,7 +205,7 @@ export function ProjectDetailPage() {
                 className="mt-1 h-10 w-full rounded-lg border border-border bg-secondary/50 px-3 text-sm outline-none focus:border-primary/40"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <label className="text-xs text-muted-foreground">Pending (INR)</label>
               <input
                 value={pending_amount}
@@ -216,20 +215,20 @@ export function ProjectDetailPage() {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="min-w-0">
               <label htmlFor="pd-start" className="text-xs text-muted-foreground">
                 Start date
               </label>
-              <div className="mt-1">
+              <div className="mt-1 w-full min-w-0">
                 <DatePicker id="pd-start" value={start_date} onChange={setStartDate} placeholder="Start" />
               </div>
             </div>
-            <div>
+            <div className="min-w-0">
               <label htmlFor="pd-end" className="text-xs text-muted-foreground">
                 End date
               </label>
-              <div className="mt-1">
+              <div className="mt-1 w-full min-w-0">
                 <DatePicker id="pd-end" value={end_date} onChange={setEndDate} placeholder="End" />
               </div>
             </div>
@@ -243,22 +242,42 @@ export function ProjectDetailPage() {
               className="mt-1 w-full rounded-lg border border-border bg-secondary/50 px-3 py-2 text-sm outline-none focus:border-primary/40 resize-y min-h-[5rem]"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-4">
             <div>
-              <label className="text-xs text-muted-foreground">Progress (0–100)</label>
-              <input
-                value={progress}
-                onChange={(e) => setProgress(e.target.value)}
-                inputMode="numeric"
-                className="mt-1 h-10 w-full rounded-lg border border-border bg-secondary/50 px-3 text-sm outline-none focus:border-primary/40"
-              />
+              <label htmlFor="project-progress-slider" className="text-xs text-muted-foreground">
+                Progress (0–100)
+              </label>
+              <div className="mt-3 rounded-xl border border-border/60 bg-secondary/30 px-4 py-4 sm:px-5">
+                <output
+                  htmlFor="project-progress-slider"
+                  className="block text-center text-3xl font-semibold tabular-nums tracking-tight text-foreground"
+                  aria-live="polite"
+                >
+                  {progress}
+                  <span className="text-lg font-medium text-muted-foreground ml-0.5">%</span>
+                </output>
+                <p className="text-center text-[11px] text-muted-foreground mt-0.5 mb-3">Drag to set completion %</p>
+                <Slider
+                  id="project-progress-slider"
+                  value={[progress]}
+                  onValueChange={(v) => setProgress(v[0] ?? 0)}
+                  min={0}
+                  max={100}
+                  step={1}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-[10px] text-muted-foreground mt-2 tabular-nums">
+                  <span>0</span>
+                  <span>100</span>
+                </div>
+              </div>
             </div>
             <div>
               <label className="text-xs text-muted-foreground">Status</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="mt-1 h-10 w-full rounded-lg border border-border bg-secondary/50 px-3 text-sm outline-none focus:border-primary/40"
+                className="mt-1 h-11 w-full sm:max-w-md rounded-lg border border-border bg-secondary/50 px-3 text-sm outline-none focus:border-primary/40"
               >
                 <option value="planning">planning</option>
                 <option value="ongoing">ongoing</option>
@@ -266,7 +285,7 @@ export function ProjectDetailPage() {
               </select>
             </div>
           </div>
-          <Button type="submit" disabled={updateMut.isPending}>
+          <Button type="submit" disabled={updateMut.isPending} className="w-full sm:w-auto min-h-11">
             {updateMut.isPending ? "Saving…" : "Save changes"}
           </Button>
         </form>
